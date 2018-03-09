@@ -1,0 +1,8 @@
+body {
+  background:#1b1e29;
+  color:#fff;
+}
+
+.flex-padding {
+  flex-grow:1;
+}
