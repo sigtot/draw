@@ -12,9 +12,13 @@ class WSCall {
      * WSCall constructor.
      *
      * @param string $method
+     * @param mixed $data
      */
-    public function __construct($method) {
+    public function __construct($method, $data = null) {
         $this->method = $method;
+        foreach ($data as $property => $value) {
+            $this->addProperty($property, $value);
+        }
     }
 
     /**
@@ -33,7 +37,7 @@ class WSCall {
 
     /**
      * @param string $property
-     * @param string $value
+     * @param mixed $value
      */
     public function addProperty($property, $value) {
         $this->{$property} = $value;

@@ -25,7 +25,7 @@ class DrawSession {
      * Session constructor.
      */
     public function __construct() {
-        $this->clients = new \SplObjectStorage;
+        $this->clients = new \SplObjectStorage();
     }
 
     /**
@@ -61,9 +61,44 @@ class DrawSession {
     }
 
     /**
-     * @param ConnectionInterface $client
+     * @return array of client ids
      */
-    public function addClient(ConnectionInterface $client) {
+    public function getClientNames() {
+        $idArray = array();
+        /** @var DrawClient $client */
+        foreach ($this->clients as $client) {
+            array_push($idArray, $client->getName());
+        }
+        return $idArray;
+    }
+
+    /**
+     * @param DrawClient $client
+     */
+    public function addClient(DrawClient $client) {
         $this->clients->attach($client);
+    }
+
+    /**
+     * Notify all the session's clients of an event.
+     *
+     * @param string $event
+     * @param array $data is an relational array containing extra fields for the WSCall object
+     * @param DrawClient $excludedClient
+     */
+    public function notifyClients($event, $data = null, $excludedClient = null){
+        // Create the return call object
+        $returnCall = new WSCall($event);
+        if($data !== null) {
+            foreach ($data as $property => $value) {
+                $returnCall->addProperty($property, $value);
+            }
+        }
+
+        // Send it to all clients in the session (except maybe one excluded client)
+        foreach ($this->clients as $client) {
+            if($excludedClient !== null && $client !== $excludedClient)
+                $client->send(json_encode($returnCall));
+        }
     }
 }
