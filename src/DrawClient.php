@@ -3,6 +3,7 @@
 namespace Draw;
 
 use Ratchet\ConnectionInterface;
+use Draw\DrawSession;
 
 class DrawClient implements ConnectionInterface{
     /**
@@ -16,6 +17,11 @@ class DrawClient implements ConnectionInterface{
     private $connection;
 
     /**
+     * @var DrawSession
+     */
+    private $session;
+
+    /**
      * DrawClient constructor.
      *
      * @param ConnectionInterface $connection
@@ -23,6 +29,7 @@ class DrawClient implements ConnectionInterface{
     public function __construct(ConnectionInterface $connection) {
         $this->connection = $connection;
         $this->name = "User-$connection->resourceId";
+        $this->session = null;
     }
 
     /**
@@ -58,10 +65,10 @@ class DrawClient implements ConnectionInterface{
      *
      * @param  string $data
      *
-     * @return \Ratchet\ConnectionInterface
+     * @return ConnectionInterface
      */
     function send($data) {
-        $this->connection->send($data);
+        return $this->connection->send($data);
     }
 
     /**
@@ -69,4 +76,19 @@ class DrawClient implements ConnectionInterface{
      */
     function close() {
         $this->connection->close();
-}}
+    }
+
+    /**
+     * @return \Draw\DrawSession
+     */
+    public function getSession() {
+        return $this->session;
+    }
+
+    /**
+     * @param \Draw\DrawSession $session
+     */
+    public function setSession($session) {
+        $this->session = $session;
+    }
+}

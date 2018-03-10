@@ -16,8 +16,10 @@ class WSCall {
      */
     public function __construct($method, $data = null) {
         $this->method = $method;
-        foreach ($data as $property => $value) {
-            $this->addProperty($property, $value);
+        if($data !== null) {
+            foreach ($data as $property => $value) {
+                $this->addProperty($property, $value);
+            }
         }
     }
 

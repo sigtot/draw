@@ -5,14 +5,16 @@ use Ratchet\ConnectionInterface;
 use Draw\DrawSession;
 use Draw\WSCall;
 use Draw\DrawClient;
+use Draw\DrawClientStorage;
+use Draw\DrawSessionStorage;
 
 class DrawSocket implements MessageComponentInterface {
     protected $clients;
     protected $sessions;
 
     public function __construct() {
-        $this->clients = new \SplObjectStorage;
-        $this->sessions = new \SplObjectStorage;
+        $this->clients = new DrawClientStorage;
+        $this->sessions = new DrawSessionStorage;
     }
 
     public function onOpen(ConnectionInterface $conn) {
@@ -22,13 +24,13 @@ class DrawSocket implements MessageComponentInterface {
 
         echo "New connection! ({$client->getName()})\n";
         $returnCall = new WSCall('you_are', array(
-            'id' => $client->getName(),
+            'name' => $client->getName(),
         ));
         $client->send(json_encode($returnCall));
     }
 
     public function onMessage(ConnectionInterface $conn, $msg) {
-        $client = new DrawClient($conn);
+        $client = $this->clients->findByConnection($conn);
         echo sprintf("Connection %d sent %s.\n", $client->getName(), $msg);
 
         $call = json_decode($msg);
@@ -39,14 +41,7 @@ class DrawSocket implements MessageComponentInterface {
                     foreach ($this->sessions as $session) {
                         if ($call->pin === $session->getPin()) {
                             $session->addClient($client); // Add client to session
-                            $session->notifyClients('client_added', array('client_name' => $client->getName()), $client);
-
-                            $returnCall = new WSCall('join_session', array(
-                                'pin' => $call->pin,
-                                'clients' => $session->getClientNames(),
-                            ));
-                            $client->send(json_encode($returnCall));
-                            break;
+                            return;
                         }
                     }
                 }
@@ -56,31 +51,30 @@ class DrawSocket implements MessageComponentInterface {
                 $session->generatePin($this->sessions);
                 $session->addClient($client);
                 $this->sessions->attach($session);
-
-                $returnCall = new WSCall('join_session', array(
-                    'pin' => $session->getPin(),
-                    'clients' => $session->getClientNames(),
-                ));
-                $client->send(json_encode($returnCall));
                 break;
 
         }
     }
 
     public function onClose(ConnectionInterface $conn) {
-        $client = new DrawClient($conn);
+        $client = $this->clients->findByConnection($conn);
         // The connection is closed, remove it, as we can no longer send it messages
+        $session = $client->getSession();
+        if($session !== null){
+            $session->removeClient($client);
+        }
         $this->clients->detach($client);
-
 
         echo "Client {$client->getName()} has disconnected\n";
 
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e) {
-        $client = new DrawClient($conn);
-        echo "An error has occurred: {$e->getMessage()}\n";
+        $client = $this->clients->findByConnection($conn);
+        $client->getSession()->removeClient($client);
+        $this->clients->detach($client);
 
-        $client->close();
+        echo "An error has occurred: {$e->getMessage()}\n";
+        $conn->close();
     }
 }

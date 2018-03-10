@@ -3,6 +3,8 @@
 namespace Draw;
 
 use Ratchet\ConnectionInterface;
+use Draw\DrawClientStorage;
+use Draw\DrawSessionStorage;
 
 /**
  * Class DrawSession
@@ -25,7 +27,7 @@ class DrawSession {
      * Session constructor.
      */
     public function __construct() {
-        $this->clients = new \SplObjectStorage();
+        $this->clients = new DrawClientStorage();
     }
 
     /**
@@ -37,9 +39,9 @@ class DrawSession {
 
     /**
      * Generates a pin that does not belong to any other sessions
-     * @param \SplObjectStorage $sessions
+     * @param DrawSessionStorage $sessions
      */
-    public function generatePin(\SplObjectStorage $sessions) {
+    public function generatePin(DrawSessionStorage $sessions) {
         $pin = (string) rand(100000, 999999);
         $unique = false; // Assume not unique
         while(!$unique) {
@@ -54,7 +56,7 @@ class DrawSession {
     }
 
     /**
-     * @return \SplObjectStorage
+     * @return DrawClientStorage
      */
     public function getClients() {
         return $this->clients;
@@ -73,17 +75,42 @@ class DrawSession {
     }
 
     /**
+     * Adds client to $clients and set the client's session to this session
+     *
      * @param DrawClient $client
      */
     public function addClient(DrawClient $client) {
         $this->clients->attach($client);
+        $client->setSession($this);
+
+        $returnCall = new WSCall('join_session', array(
+            'pin' => $this->getPin(),
+            'clients' => $this->getClientNames(),
+        ));
+        $client->send(json_encode($returnCall));
+
+        $this->notifyClients('client_added', array('client_name' => $client->getName()), $client);
+    }
+
+    /**
+     * Remove client from $clients and null the client's session
+     *
+     * @param DrawClient $client
+     */
+    public function removeClient(DrawClient $client) {
+        $this->clients->detach($client);
+        $client->setSession(null);
+
+        $this->notifyClients('client_left', array(
+            'client_name' => $client->getName(),
+        ));
     }
 
     /**
      * Notify all the session's clients of an event.
      *
      * @param string $event
-     * @param array $data is an relational array containing extra fields for the WSCall object
+     * @param array $data is a relational array containing extra fields for the WSCall object
      * @param DrawClient $excludedClient
      */
     public function notifyClients($event, $data = null, $excludedClient = null){
@@ -97,7 +124,7 @@ class DrawSession {
 
         // Send it to all clients in the session (except maybe one excluded client)
         foreach ($this->clients as $client) {
-            if($excludedClient !== null && $client !== $excludedClient)
+            if($excludedClient == null || $client !== $excludedClient)
                 $client->send(json_encode($returnCall));
         }
     }
