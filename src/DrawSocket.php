@@ -64,14 +64,18 @@ class DrawSocket implements MessageComponentInterface {
             $session->removeClient($client);
         }
         $this->clients->detach($client);
-
+        if(sizeof($session->getClients()) === 0) $this->sessions->detach($session);
         echo "Client {$client->getName()} has disconnected\n";
 
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e) {
         $client = $this->clients->findByConnection($conn);
-        $client->getSession()->removeClient($client);
+
+        $session = $client->getSession();
+        $session->removeClient($client);
+        if(sizeof($session->getClients()) === 0) $this->sessions->detach($session);
+
         $this->clients->detach($client);
 
         echo "An error has occurred: {$e->getMessage()}\n";
