@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="h-100" lang="en">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
@@ -13,33 +13,42 @@
     <link rel="stylesheet" href="css/index.css">
     <title>Title</title>
 </head>
-<body class="h-100">
+<body>
 
-<div class="container d-flex flex-column h-100">
+<div class="container view" id="main">
     <div class="flex-padding"></div>
     <div class="row">
         <div class="col-12 text-center my-3"><h1>Draw together!</h1></div>
         <div class="col-12 col-sm-8 offset-sm-2 col-lg-6 offset-lg-3 text-center">
             <h3>Join a game</h3>
-            <form>
-                <div class="form-group">
-                    <input id="session-code-input" class="form-control p-3 text-center" pattern="^[0-9]+$" placeholder="Game pin">
-                    <input id="session-code-input-button" type="button" value="Join game" class="btn btn-success p-3 w-100 mt-3">
-                </div>
-            </form>
+            <div class="form-group">
+                <input id="session-code-input" class="form-control p-3 text-center" pattern="^[0-9]+$" placeholder="Game pin">
+                <input id="session-code-input-button" type="button" value="Join game" class="btn btn-success p-3 w-100 mt-3">
+            </div>
         </div>
 
         <div class="col-12 col-sm-8 offset-sm-2 col-lg-6 offset-lg-3 text-center">
             <h3>or</h3>
-            <form>
-                <div class="form-group">
-                    <input id="session-create-button" type="button" value="Create new game" class="btn btn-primary p-4 w-100 mt-3">
-                </div>
-            </form>
+            <div class="form-group">
+                <input id="session-create-button" type="button" value="Create new game" class="btn btn-primary p-4 w-100 mt-3">
+            </div>
         </div>
 
     </div>
     <div class="flex-padding"></div>
+</div>
+
+<div class="view" id="in-session">
+    <header class="navbar d-flex flex-row">
+        <div class="flex-grow">
+            <div class="form-group m-0">
+                <input id="name-input" class="form-control p-1 px-2 text-center d-inline">
+                <input type="button" value="Change name" class="btn btn-primary p-1 px-2 d-inline">
+            </div>
+        </div>
+        <div><h3>Game pin: <span id="nav-game-pin">123123</span></h3></div>
+        <div class="flex-grow" id="user-container"></div>
+    </header>
 </div>
 </body>
 </html>

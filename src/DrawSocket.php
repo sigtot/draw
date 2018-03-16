@@ -23,9 +23,10 @@ class DrawSocket implements MessageComponentInterface {
         $this->clients->attach($client);
 
         echo "New connection! ({$client->getName()})\n";
-        $returnCall = new WSCall('you_are', array(
+        $returnCall = new WSCall('you_are', array( 'client' => array(
             'name' => $client->getName(),
-        ));
+            'id' => $client->getId(),
+        )));
         $client->send(json_encode($returnCall));
     }
 
@@ -61,10 +62,10 @@ class DrawSocket implements MessageComponentInterface {
         // The connection is closed, remove it, as we can no longer send it messages
         $session = $client->getSession();
         if($session !== null){
+            if(sizeof($session->getClients()) === 1) $this->sessions->detach($session);
             $session->removeClient($client);
         }
         $this->clients->detach($client);
-        if(sizeof($session->getClients()) === 0) $this->sessions->detach($session);
         echo "Client {$client->getName()} has disconnected\n";
 
     }
