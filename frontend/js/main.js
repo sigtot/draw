@@ -86,6 +86,7 @@ $('document').ready(function(){
             case 'client_left':
                 clientLeft(data.client);
                 console.log(data);
+                break;
             case 'you_are':
                 console.log(data);
                 youAre(data.client.name);
