@@ -47,6 +47,8 @@ function joinSession(pin, clients) {
     for(var i = 0; i < clients.length; i++) {
         addUserToContainer(clients[i]);
     }
+
+    inSession = true;
 }
 
 function youAre(name) {
@@ -59,6 +61,14 @@ function clientAdded(client) {
 
 function clientLeft(client) {
     removeUserFromContainer(client);
+}
+
+function changeClientName(id, newName) {
+    $("#user-"+id).attr('data-original-title', newName);
+    $('#name-change-button').prop('disabled', false).val('Changed!');
+    window.setTimeout(function(){
+        $('#name-change-button').val('Change name');
+    }, 900);
 }
 
 $('document').ready(function(){
@@ -91,14 +101,21 @@ $('document').ready(function(){
                 console.log(data);
                 youAre(data.client.name);
                 break;
+            case 'client_changed_name':
+                changeClientName(data.id, data.newName);
+                console.log(data);
+                break;
             default:
-                console.log('Unknown method: '+e.data);
+                console.warn('Unknown method: '+e.data);
         }
     };
 
     var sessionCodeInput = $('#session-code-input');
     var sessionCodeInputButton = $('#session-code-input-button');
     var sessionCreateButton = $('#session-create-button');
+
+    var changeNameButton = $('#name-change-button');
+    var nameInput = $('#name-input');
 
     sessionCodeInputButton.click(function() {
         if(inSession) return;
@@ -120,4 +137,15 @@ $('document').ready(function(){
         var inputString = sessionCodeInput.val();
         sessionCodeInput.val(inputString.replace(/\D/g,''));
     });
+
+    changeNameButton.click(function() {
+        if(!inSession) return;
+
+        var changeNameCall = new WSCall('change_name');
+        changeNameCall.name = nameInput.val();
+        conn.send(JSON.stringify(changeNameCall));
+
+        // Disable the button
+        $(this).prop('disabled', true).val('Changing...');
+    })
 });

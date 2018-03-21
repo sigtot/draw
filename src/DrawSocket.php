@@ -47,6 +47,7 @@ class DrawSocket implements MessageComponentInterface {
                     }
                 }
                 break;
+
             case 'create_session':
                 $session = new DrawSession();
                 $session->generatePin($this->sessions);
@@ -54,6 +55,13 @@ class DrawSocket implements MessageComponentInterface {
                 $this->sessions->attach($session);
                 break;
 
+            case 'change_name':
+                $client->setName(htmlspecialchars($call->name, ENT_QUOTES));
+                $client->getSession()->notifyClients('client_changed_name', array(
+                    'id' => $client->getId(),
+                    'newName' => $client->getName(),
+                ));
+                break;
         }
     }
 
